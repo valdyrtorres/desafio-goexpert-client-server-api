@@ -14,13 +14,7 @@ func main() {
 	// Registrar a rota "/" para o handler HomeHandler
 	muxDesafio.HandleFunc("/", handlers.HomeHandler)
 
-	muxDesafio.HandleFunc("/sobre", func(w http.ResponseWriter, r *http.Request) {
-		fmt.Fprintln(w, "Este é um programa de exemplo em Go.")
-	})
-
-	muxDesafio.HandleFunc("/contato", func(w http.ResponseWriter, r *http.Request) {
-		fmt.Fprintln(w, "Entre em contato: contato@example.com")
-	})
+	muxDesafio.HandleFunc("/cotacao", handlers.CotacaoHandler)
 
 	// Iniciar o servidor na porta 8080
 	fmt.Println("Servidor rodando na porta 8080...")
