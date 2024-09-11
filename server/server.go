@@ -4,17 +4,18 @@ import (
 	"fmt"
 	"net/http"
 
+	"github.com/gorilla/mux"
 	"github.com/usuario/desafio-go/handlers"
 )
 
 func main() {
 	// Criar o ServeMux (multiplexador) para roteamento de URLs
-	muxDesafio := http.NewServeMux()
+	muxDesafio := mux.NewRouter()
 
 	// Registrar a rota "/" para o handler HomeHandler
 	muxDesafio.HandleFunc("/", handlers.HomeHandler)
 
-	muxDesafio.HandleFunc("/cotacao", handlers.CotacaoHandler)
+	muxDesafio.HandleFunc("/cotacao/{cambio}", handlers.CotacaoHandler)
 
 	// Iniciar o servidor na porta 8080
 	fmt.Println("Servidor rodando na porta 8080...")

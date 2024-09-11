@@ -2,9 +2,10 @@ package handlers
 
 import (
 	"encoding/json"
-	"fmt"
 	"io"
 	"net/http"
+
+	"github.com/gorilla/mux"
 )
 
 type AweSomeApi struct {
@@ -22,19 +23,15 @@ type AweSomeApi struct {
 }
 
 func CotacaoHandler(w http.ResponseWriter, r *http.Request) {
-	if r.URL.Path != "/cotacao" {
-		w.WriteHeader(http.StatusNotFound)
-		return
-	}
-
-	modoCambioParam := r.URL.Query().Get("cambio")
-	if modoCambioParam == "" {
+	vars := mux.Vars(r)
+	modoCambioParam, ok := vars["cambio"]
+	if !ok || modoCambioParam == "" {
 		w.WriteHeader(http.StatusBadRequest)
 		return
 	}
 
-	cotacao, error := PegaCotacao(modoCambioParam)
-	if error != nil {
+	cotacao, err := PegaCotacao(modoCambioParam)
+	if err != nil {
 		w.WriteHeader(http.StatusInternalServerError)
 		return
 	}
@@ -43,29 +40,27 @@ func CotacaoHandler(w http.ResponseWriter, r *http.Request) {
 	w.WriteHeader(http.StatusOK)
 	json.NewEncoder(w).Encode(cotacao)
 
-	//fmt.Fprintln(w, "Chama a API de cotacao!")
 }
 
 func PegaCotacao(modoCambio string) (*map[string]AweSomeApi, error) {
 
-	fmt.Printf("modoCambio: %s%s", "https://economia.awesomeapi.com.br/json/last/", modoCambio)
-
-	resp, error := http.Get("https://economia.awesomeapi.com.br/json/last/" + modoCambio)
-	if error != nil {
-		return nil, error
+	resp, err := http.Get("https://economia.awesomeapi.com.br/json/last/" + modoCambio)
+	if err != nil {
+		return nil, err
 	}
 	defer resp.Body.Close()
-	body, error := io.ReadAll(resp.Body)
-	if error != nil {
-		return nil, error
+
+	body, err := io.ReadAll(resp.Body)
+	if err != nil {
+		return nil, err
 	}
 
 	// Usando mapa, pois o cambio pode mudar
 	var resultado map[string]AweSomeApi
 
-	error = json.Unmarshal(body, &resultado)
-	if error != nil {
-		return nil, error
+	err = json.Unmarshal(body, &resultado)
+	if err != nil {
+		return nil, err
 	}
 	return &resultado, nil
 }

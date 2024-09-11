@@ -35,4 +35,7 @@ go mod init github.com/usuario/desafio-go
 Chamada:
 http://localhost:8080/cotacao?cambio=USD-BRL
 
+Instalando o gorilla:
+go get -u github.com/gorilla/mux
+
 
