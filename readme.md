@@ -3,4 +3,9 @@ go mod init github.com/usuario/desafio-go
 
 // criar o main
 
+------------
+
+Chamada:
+http://localhost:8080/cotacao?cambio=USD-BRL
+
 

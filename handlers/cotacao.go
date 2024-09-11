@@ -1,8 +1,8 @@
 package handlers
 
 import (
-	// "fmt"
 	"encoding/json"
+	"fmt"
 	"io"
 	"net/http"
 )
@@ -22,12 +22,12 @@ type AweSomeApi struct {
 }
 
 func CotacaoHandler(w http.ResponseWriter, r *http.Request) {
-	if r.URL.Path != "/" {
+	if r.URL.Path != "/cotacao" {
 		w.WriteHeader(http.StatusNotFound)
 		return
 	}
 
-	modoCambioParam := r.URL.Query().Get("cotacao")
+	modoCambioParam := r.URL.Query().Get("cambio")
 	if modoCambioParam == "" {
 		w.WriteHeader(http.StatusBadRequest)
 		return
@@ -46,7 +46,9 @@ func CotacaoHandler(w http.ResponseWriter, r *http.Request) {
 	//fmt.Fprintln(w, "Chama a API de cotacao!")
 }
 
-func PegaCotacao(modoCambio string) (*AweSomeApi, error) {
+func PegaCotacao(modoCambio string) (*map[string]AweSomeApi, error) {
+
+	fmt.Printf("modoCambio: %s%s", "https://economia.awesomeapi.com.br/json/last/", modoCambio)
 
 	resp, error := http.Get("https://economia.awesomeapi.com.br/json/last/" + modoCambio)
 	if error != nil {
@@ -57,10 +59,13 @@ func PegaCotacao(modoCambio string) (*AweSomeApi, error) {
 	if error != nil {
 		return nil, error
 	}
-	var c AweSomeApi
-	error = json.Unmarshal(body, &c)
+
+	// Usando mapa, pois o cambio pode mudar
+	var resultado map[string]AweSomeApi
+
+	error = json.Unmarshal(body, &resultado)
 	if error != nil {
 		return nil, error
 	}
-	return &c, nil
+	return &resultado, nil
 }
