@@ -6,5 +6,5 @@ import (
 )
 
 func HomeHandler(w http.ResponseWriter, r *http.Request) {
-	fmt.Fprintln(w, "H-Bem-vindo servidor Go consumidor cotação dolar!")
+	fmt.Fprintln(w, "Bem-vindo servidor Go consumidor cotação dolar!")
 }
