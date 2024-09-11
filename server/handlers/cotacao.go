@@ -36,6 +36,30 @@ func CotacaoHandler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
+	// eu quero somente o bid para fornecer ao client.go
+	for _, valor := range *cotacao {
+		w.Header().Set("Content-Type", "application/json")
+		w.WriteHeader(http.StatusOK)
+		json.NewEncoder(w).Encode(map[string]string{"bid": valor.Bid})
+		return
+	}
+
+}
+
+func CotacaoFullHandler(w http.ResponseWriter, r *http.Request) {
+	vars := mux.Vars(r)
+	modoCambioParam, ok := vars["cambio"]
+	if !ok || modoCambioParam == "" {
+		w.WriteHeader(http.StatusBadRequest)
+		return
+	}
+
+	cotacao, err := PegaCotacao(modoCambioParam)
+	if err != nil {
+		w.WriteHeader(http.StatusInternalServerError)
+		return
+	}
+
 	w.Header().Set("Content-Type", "application/json")
 	w.WriteHeader(http.StatusOK)
 	json.NewEncoder(w).Encode(cotacao)
