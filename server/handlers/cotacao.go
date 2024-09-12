@@ -5,6 +5,10 @@ import (
 	"io"
 	"net/http"
 
+	"context"
+	"log"
+	"time"
+
 	"github.com/gorilla/mux"
 )
 
@@ -68,9 +72,21 @@ func CotacaoFullHandler(w http.ResponseWriter, r *http.Request) {
 
 func PegaCotacao(modoCambio string) (*map[string]AweSomeApi, error) {
 
-	resp, err := http.Get("https://economia.awesomeapi.com.br/json/last/" + modoCambio)
+	req, err := http.NewRequest(http.MethodGet, "https://economia.awesomeapi.com.br/json/last/"+modoCambio, nil)
 	if err != nil {
-		return nil, err
+		log.Fatal(err)
+	}
+
+	// timeout máximo para chamar a API de cotação do dólar deverá ser de 200ms .
+	// Utilizando o package "context"
+	ctx, cancel := context.WithTimeout(context.Background(), time.Duration(time.Millisecond*200))
+	defer cancel()
+	req = req.WithContext(ctx)
+
+	c := &http.Client{}
+	resp, err := c.Do(req)
+	if err != nil {
+		log.Println(err)
 	}
 	defer resp.Body.Close()
 
