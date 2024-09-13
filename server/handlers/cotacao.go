@@ -52,6 +52,10 @@ func CotacaoHandler(w http.ResponseWriter, r *http.Request) {
 	}
 	defer db.Close()
 
+	// timeout máximo para conseguir persistir os dados no banco deverá ser de 10ms.
+	ctx, cancel := context.WithTimeout(context.Background(), 10*time.Millisecond)
+	defer cancel()
+
 	// Cria a tabela se não existir
 	createTableSQL := `CREATE TABLE IF NOT EXISTS cotacoes (
 		"id" INTEGER PRIMARY KEY AUTOINCREMENT,
@@ -82,20 +86,25 @@ func CotacaoHandler(w http.ResponseWriter, r *http.Request) {
 	for _, resultado := range *cotacao {
 		insertSQL := `INSERT INTO cotacoes (code, codein, name, high, low, varBid, pctChange, bid, ask, timestamp, create_date) 
 		VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`
-		_, err = tx.Exec(insertSQL, resultado.Code, resultado.Codein, resultado.Nome, resultado.High, resultado.Low, resultado.VarBid, resultado.PctChange, resultado.Bid, resultado.Ask, resultado.Timestamp, resultado.CreateDate)
+		_, err = tx.ExecContext(ctx, insertSQL, resultado.Code, resultado.Codein, resultado.Nome, resultado.High, resultado.Low, resultado.VarBid, resultado.PctChange, resultado.Bid, resultado.Ask, resultado.Timestamp, resultado.CreateDate)
 		if err != nil {
+			if ctx.Err() == context.DeadlineExceeded {
+				log.Println("Timeout ao tentar persistir os dados no banco de dados.")
+			} else {
+				log.Fatalf("Erro ao inserir dados: %v", err)
+			}
 			tx.Rollback() // Desfaz a transação em caso de erro
-			log.Fatal(err)
+		} else {
+			// Confirma a transação
+			err = tx.Commit()
+			if err != nil {
+				log.Fatal(err)
+			}
+
+			fmt.Println("Cotação registrada com sucesso!")
 		}
 	}
 
-	// Confirma a transação
-	err = tx.Commit()
-	if err != nil {
-		log.Fatal(err)
-	}
-
-	fmt.Println("Cotação registrada com sucesso!")
 	// ****** Fim processo de registro no banco
 
 	// eu quero somente o bid para fornecer ao client.go
