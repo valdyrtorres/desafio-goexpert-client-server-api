@@ -2,6 +2,7 @@ package handlers
 
 import (
 	"encoding/json"
+	"fmt"
 	"io"
 	"net/http"
 
@@ -9,7 +10,10 @@ import (
 	"log"
 	"time"
 
+	"database/sql"
+
 	"github.com/gorilla/mux"
+	_ "github.com/mattn/go-sqlite3"
 )
 
 type AweSomeApi struct {
@@ -39,6 +43,60 @@ func CotacaoHandler(w http.ResponseWriter, r *http.Request) {
 		w.WriteHeader(http.StatusInternalServerError)
 		return
 	}
+
+	// ******* Inicio processo de registro no banco
+	// Conecta ao banco de dados SQLite
+	db, err := sql.Open("sqlite3", "./cotacoes.db?_timeout=10&_journal_mode=WAL")
+	if err != nil {
+		log.Fatal(err)
+	}
+	defer db.Close()
+
+	// Cria a tabela se não existir
+	createTableSQL := `CREATE TABLE IF NOT EXISTS cotacoes (
+		"id" INTEGER PRIMARY KEY AUTOINCREMENT,
+		"code" TEXT,
+		"codein" TEXT,
+		"name" TEXT,
+		"high" TEXT,
+		"low" TEXT,
+		"varBid" TEXT,
+		"pctChange" TEXT,
+		"bid" TEXT,
+		"ask" TEXT,
+		"timestamp" TEXT,
+		"create_date" TEXT
+	);`
+	_, err = db.Exec(createTableSQL)
+	if err != nil {
+		log.Fatal(err)
+	}
+
+	// Inicia uma transação
+	tx, err := db.Begin()
+	if err != nil {
+		log.Fatal(err)
+	}
+
+	// Insere os dados no banco de dados
+	for _, resultado := range *cotacao {
+		insertSQL := `INSERT INTO cotacoes (code, codein, name, high, low, varBid, pctChange, bid, ask, timestamp, create_date) 
+		VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`
+		_, err = tx.Exec(insertSQL, resultado.Code, resultado.Codein, resultado.Nome, resultado.High, resultado.Low, resultado.VarBid, resultado.PctChange, resultado.Bid, resultado.Ask, resultado.Timestamp, resultado.CreateDate)
+		if err != nil {
+			tx.Rollback() // Desfaz a transação em caso de erro
+			log.Fatal(err)
+		}
+	}
+
+	// Confirma a transação
+	err = tx.Commit()
+	if err != nil {
+		log.Fatal(err)
+	}
+
+	fmt.Println("Cotação registrada com sucesso!")
+	// ****** Fim processo de registro no banco
 
 	// eu quero somente o bid para fornecer ao client.go
 	for _, valor := range *cotacao {
