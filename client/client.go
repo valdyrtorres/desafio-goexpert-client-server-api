@@ -49,6 +49,7 @@ func main() {
 		fmt.Fprintf(os.Stderr, "Erro ao fazer parse da resposta: %v\n", err)
 	}
 
+	// Grava no arquivo
 	file, err := os.Create("cotacao.txt")
 	if err != nil {
 		fmt.Fprintf(os.Stderr, "Erro ao criar arquivo: %v\n", err)

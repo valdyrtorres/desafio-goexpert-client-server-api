@@ -41,4 +41,7 @@ http://localhost:8080/cotacao/full/USD-BRL
 Instalando o gorilla:
 go get -u github.com/gorilla/mux
 
+Adicionar:
+Driver SQLite: go get -u github.com/mattn/go-sqlite3 
+
 
