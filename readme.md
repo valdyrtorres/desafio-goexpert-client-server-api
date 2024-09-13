@@ -44,4 +44,17 @@ go get -u github.com/gorilla/mux
 Adicionar:
 Driver SQLite: go get -u github.com/mattn/go-sqlite3 
 
+-----
+mini tutorial:
+primeiro colocar o server no ar:
+cd server
+go run server.go
+
+depois, executar o cliente para consumir o serviço do server.go:
+cd ..
+cd client
+go run client.go
+
+Obs: caso queira consumir direto do server.go sem usar o client.go:
+http://localhost:8080/cotacao/USD-BRL
 
